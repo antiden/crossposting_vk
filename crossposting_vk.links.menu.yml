@@ -1,0 +1,6 @@
+crossposting_vk.settings_form:
+  title: 'Crossposting to VKontakte'
+  description: 'VKontakte Settings'
+  parent: system.admin_config_services
+  route_name: crossposting_vk.settings_form
+  weight: 10

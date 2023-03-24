@@ -1,0 +1,57 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\image\Entity\ImageStyle;
+
+/**
+ * Implements hook_entity_insert().
+ * After inserting node, check if active VK status from Config form and publish node to the Company group wall in VK
+ * For testing only update - crossposting_vk_entity_update
+ */
+
+function crossposting_vk_entity_update(EntityInterface $entity) {
+  
+  $config = \Drupal::config('crossposting_vk.settings');
+  $key = $config->get('key');
+  $owner_id = $config->get('owner_id');
+  $version = $config->get('version');
+  $active = $entity->field_crossposting_vk->value; // Choose your field for check status
+
+  if ($active && $entity->getEntityTypeId() == 'node' && $entity->bundle() == 'news') {
+    $id = $entity->id();
+    $title = $entity->title->value;
+    $node_url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+    $body = strip_tags($entity->body->value);
+    $textStrip = str_replace("&nbsp;", '', $body);
+    $message = "{$title}\n\n{$textStrip}";
+    $image = $entity->field_image->entity->uri->value;
+    $style = ImageStyle::load('wide');
+    $thumb = $style->buildUrl($image);
+
+    $access_token = \Drupal::service('key.repository')->getKey($key)->getKeyValue();
+    $url = 'https://api.vk.com/method/wall.post';
+    $params = array(
+      'access_token' => $access_token,
+      'owner_id' => '-' . $owner_id,
+      'attachments' => $node_url,
+      'message' => $message,
+      'form_group' => 1,
+      'v' => $version
+    );
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url . '?' . http_build_query($params));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    // Check the response for any errors
+    $response_array = json_decode($response, true);
+    if (isset($response_array['response'])) {
+      $message = t('Post successfully posted on the wall.');
+    } else {
+      $message = t('Error posting on the wall: ') . $response;
+    }
+    \Drupal::messenger()->addStatus($message);
+  }
+}

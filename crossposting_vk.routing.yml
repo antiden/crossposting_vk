@@ -1,0 +1,7 @@
+crossposting_vk.settings_form:
+  path: '/admin/config/services/crossposting_vk'
+  defaults:
+    _title: 'Crossposting Settings'
+    _form: 'Drupal\crossposting_vk\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
