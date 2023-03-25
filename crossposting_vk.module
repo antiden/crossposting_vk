@@ -1,7 +1,12 @@
 <?php
 
+require_once __DIR__.'/vendor/autoload.php';
+
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\image\Entity\ImageStyle;
+use VK\Client\VKApiClient;
+use VK\Exceptions\VKApiException;
+use VK\Exceptions\VKClientException;
 
 /**
  * Implements hook_entity_insert().
@@ -15,7 +20,7 @@ function crossposting_vk_entity_update(EntityInterface $entity) {
   $key = $config->get('key');
   $owner_id = $config->get('owner_id');
   $version = $config->get('version');
-  $active = $entity->field_crossposting_vk->value; // Choose your field for check status
+  $active = $entity->field_crossposting_vk->value;
 
   if ($active && $entity->getEntityTypeId() == 'node' && $entity->bundle() == 'news') {
     $id = $entity->id();
@@ -24,34 +29,34 @@ function crossposting_vk_entity_update(EntityInterface $entity) {
     $body = strip_tags($entity->body->value);
     $textStrip = str_replace("&nbsp;", '', $body);
     $message = "{$title}\n\n{$textStrip}";
-    $image = $entity->field_image->entity->uri->value;
-    $style = ImageStyle::load('wide');
-    $thumb = $style->buildUrl($image);
+    // $image = $entity->field_image->entity->uri->value;
+    // $style = ImageStyle::load('wide');
+    // $thumb = $style->buildUrl($image);
 
     $access_token = \Drupal::service('key.repository')->getKey($key)->getKeyValue();
-    $url = 'https://api.vk.com/method/wall.post';
+
+    $vk = new VKApiClient();
+
     $params = array(
-      'access_token' => $access_token,
       'owner_id' => '-' . $owner_id,
-      'attachments' => $node_url,
       'message' => $message,
       'form_group' => 1,
-      'v' => $version
+      'attachments' => $node_url
     );
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url . '?' . http_build_query($params));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($ch);
-    curl_close($ch);
+    try {
+      // Send message to Group
+      $vk->wall()->post($access_token, $params);
 
-    // Check the response for any errors
-    $response_array = json_decode($response, true);
-    if (isset($response_array['response'])) {
-      $message = t('Post successfully posted on the wall.');
-    } else {
-      $message = t('Error posting on the wall: ') . $response;
+      // if response "ok" set good message
+      \Drupal::messenger()->addStatus(t('Post successfully posted on the wall.'));
+
+    } catch (VKApiException $e) {
+      // handle VK API exceptions
+      \Drupal::messenger()->addStatus(t('VK API error: ') . $e->getMessage());
+    } catch (VKClientException $e) {
+      // handle VK client exceptions
+      \Drupal::messenger()->addStatus(t('VK client error: ') . $e->getMessage());
     }
-    \Drupal::messenger()->addStatus($message);
   }
 }

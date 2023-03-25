@@ -1,0 +1,8 @@
+{
+  "name": "coderteam/crossposting_vk",
+  "description": "News crossposting to VKontakte Group Wall",
+  "type": "drupal-module",
+  "require": {
+    "vkcom/vk-php-sdk": "^5.101"
+  }
+}
