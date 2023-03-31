@@ -1,7 +1,20 @@
 {
-  "name": "coderteam/crossposting_vk",
+  "name": "drupal/crossposting_vk",
   "description": "News crossposting to VKontakte Group Wall",
   "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "antiden",
+      "homepage": "https://www.drupal.org/u/antiden",
+      "role": "Maintainer"
+    },
+    {
+      "name": "coderteam",
+      "email": "mail@coderteam.ru",
+      "role": "Co-maintainer"
+    }
+  ],
   "require": {
     "vkcom/vk-php-sdk": "^5.101"
   }

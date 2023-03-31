@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__.'/vendor/autoload.php';
-
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\image\Entity\ImageStyle;
 use VK\Client\VKApiClient;
@@ -14,7 +12,7 @@ use VK\Exceptions\VKClientException;
  * For testing only update - crossposting_vk_entity_update
  */
 
-function crossposting_vk_entity_update(EntityInterface $entity) {
+function crossposting_vk_entity_insert(EntityInterface $entity) {
   
   $config = \Drupal::config('crossposting_vk.settings');
   $key = $config->get('key');
