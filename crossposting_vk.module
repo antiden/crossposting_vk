@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/vendor/autoload.php';
+
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\image\Entity\ImageStyle;
 use VK\Client\VKApiClient;
