@@ -18,43 +18,46 @@ function crossposting_vk_entity_insert(EntityInterface $entity) {
   $key = $config->get('key');
   $owner_id = $config->get('owner_id');
   $version = $config->get('version');
-  $active = $entity->field_crossposting_vk->value;
 
-  if ($active && $entity->getEntityTypeId() == 'node' && $entity->bundle() == 'news') {
-    $id = $entity->id();
-    $title = $entity->title->value;
-    $node_url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
-    $body = strip_tags($entity->body->value);
-    $textStrip = str_replace("&nbsp;", '', $body);
-    $message = "{$title}\n\n{$textStrip}";
-    // $image = $entity->field_image->entity->uri->value;
-    // $style = ImageStyle::load('wide');
-    // $thumb = $style->buildUrl($image);
+  if ($entity->getEntityTypeId() == 'node' && $entity->bundle() == 'news') {
+    $active = $entity->field_crossposting_vk->value; // Choose your field for check status
 
-    $access_token = \Drupal::service('key.repository')->getKey($key)->getKeyValue();
+    if ($active) {
+      $id = $entity->id();
+      $title = $entity->title->value;
+      $node_url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+      $body = strip_tags($entity->body->value);
+      $textStrip = str_replace("&nbsp;", '', $body);
+      $message = "{$title}\n\n{$textStrip}";
+      // $image = $entity->field_image->entity->uri->value;
+      // $style = ImageStyle::load('wide');
+      // $thumb = $style->buildUrl($image);
 
-    $vk = new VKApiClient();
+      $access_token = \Drupal::service('key.repository')->getKey($key)->getKeyValue();
 
-    $params = array(
-      'owner_id' => '-' . $owner_id,
-      'message' => $message,
-      'form_group' => 1,
-      'attachments' => $node_url
-    );
+      $vk = new VKApiClient();
 
-    try {
-      // Send message to Group
-      $vk->wall()->post($access_token, $params);
+      $params = array(
+        'owner_id' => '-' . $owner_id,
+        'message' => $message,
+        'form_group' => 1,
+        'attachments' => $node_url
+      );
 
-      // if response "ok" set good message
-      \Drupal::messenger()->addStatus(t('Post successfully posted on the wall.'));
+      try {
+        // Send message to Group
+        $vk->wall()->post($access_token, $params);
 
-    } catch (VKApiException $e) {
-      // handle VK API exceptions
-      \Drupal::messenger()->addStatus(t('VK API error: ') . $e->getMessage());
-    } catch (VKClientException $e) {
-      // handle VK client exceptions
-      \Drupal::messenger()->addStatus(t('VK client error: ') . $e->getMessage());
+        // if response "ok" set good message
+        \Drupal::messenger()->addStatus(t('Post successfully posted on the wall.'));
+
+      } catch (VKApiException $e) {
+        // handle VK API exceptions
+        \Drupal::messenger()->addStatus(t('VK API error: ') . $e->getMessage());
+      } catch (VKClientException $e) {
+        // handle VK client exceptions
+        \Drupal::messenger()->addStatus(t('VK client error: ') . $e->getMessage());
+      }
     }
   }
 }
